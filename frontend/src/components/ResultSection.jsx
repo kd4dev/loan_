@@ -19,11 +19,12 @@ const ResultSection = ({ result, loading }) => {
     return null;
   }
 
-  const isApproved = result.prediction === 'Approved';
+  const isApproved = result.prediction.toLowerCase() === 'approved';
   const confidence = result.probability ? (result.probability * 100).toFixed(1) : 0;
   
-  const limeFeatures = result.lime_explanation || [];
-  const shapFeatures = result.shap_explanation || [];
+  // The API returns limeExplanation and shapExplanation, nested with { features: [...] }
+  const limeFeatures = result.limeExplanation?.features || result.lime_explanation || [];
+  const shapFeatures = result.shapExplanation?.features || result.shap_explanation || [];
 
   return (
     <Card className="w-full">

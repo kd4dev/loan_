@@ -9,7 +9,7 @@ Welcome to the **Explainable AI (XAI) Loan Approval** project! This document ser
 We are using the **[UCI Credit Approval Dataset](https://archive.ics.uci.edu/ml/datasets/credit+approval)**. It contains 690 past loan applications.
 
 **Why does the dataset look weird?**
-To protect customer privacy, the original creators anonymized all the column names. Instead of standard names, they used `A1` through `A15`. `A16` is the final decision. 
+To https://learner.vierp.in/document-requestprotect customer privacy, the original creators anonymized all the column names. Instead of standard names, they used `A1` through `A15`. `A16` is the final decision. 
 
 Here is the "decoded" translation of what those columns actually mean, which we use in our Frontend UI:
 

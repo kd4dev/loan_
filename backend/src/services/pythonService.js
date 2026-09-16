@@ -10,11 +10,8 @@ const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || 'http://localhost:8
 
 exports.getPrediction = async (inputData) => {
     try {
-        // TODO: Send inputData to python service
-        // const response = await axios.post(`${PYTHON_SERVICE_URL}/predict`, inputData);
-        // return { prediction: response.data.prediction, probability: response.data.probability, isMock: false };
-        logger.info('Calling Python service for prediction');
-        throw new Error('Python service integration is not fully implemented yet');
+        const response = await axios.post(`${PYTHON_SERVICE_URL}/predict`, inputData);
+        return { prediction: response.data.prediction, probability: response.data.probability, isMock: false };
     } catch (error) {
         logger.error('Error calling Python service:', error.message);
         throw error;
@@ -23,17 +20,14 @@ exports.getPrediction = async (inputData) => {
 
 exports.getExplanation = async (inputData) => {
     try {
-        // TODO: Send inputData to python service
-        // const response = await axios.post(`${PYTHON_SERVICE_URL}/explain`, inputData);
-        // return { 
-        //   prediction: response.data.prediction, 
-        //   probability: response.data.probability, 
-        //   limeExplanation: response.data.limeExplanation, 
-        //   shapExplanation: response.data.shapExplanation,
-        //   isMock: false 
-        // };
-        logger.info('Calling Python service for explanation');
-        throw new Error('Python service integration is not fully implemented yet');
+        const response = await axios.post(`${PYTHON_SERVICE_URL}/explain`, inputData);
+        return { 
+          prediction: response.data.prediction, 
+          probability: response.data.probability, 
+          limeExplanation: response.data.limeExplanation, 
+          shapExplanation: response.data.shapExplanation,
+          isMock: false 
+        };
     } catch (error) {
         logger.error('Error calling Python service:', error.message);
         throw error;
