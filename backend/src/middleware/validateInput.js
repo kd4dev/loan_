@@ -1,6 +1,20 @@
+const VALID_MODELS = ['random_forest', 'logistic_regression'];
+
 module.exports = (req, res, next) => {
     if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({ error: 'Request body cannot be empty' });
+    }
+
+    // Validate model identifier if specified
+    if (req.body.model) {
+        if (!VALID_MODELS.includes(req.body.model)) {
+            return res.status(400).json({
+                error: `Invalid model '${req.body.model}'. Valid options are: ${VALID_MODELS.join(', ')}`
+            });
+        }
+    } else {
+        // Default to random_forest to preserve existing behavior
+        req.body.model = 'random_forest';
     }
 
     // Checking for some generic expected fields (flexible)

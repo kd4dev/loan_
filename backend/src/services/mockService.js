@@ -12,6 +12,7 @@ exports.generatePrediction = (inputData) => {
     return {
         prediction: isApproved ? 'approved' : 'rejected',
         probability: Number(probability.toFixed(2)),
+        model: inputData.model || 'random_forest',
         isMock: true
     };
 };

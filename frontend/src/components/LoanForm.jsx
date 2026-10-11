@@ -4,38 +4,63 @@ import { Input } from './ui/Input';
 import { Label } from './ui/Label';
 import { Button } from './ui/Button';
 
-const LoanForm = ({ onSubmit, loading }) => {
-  const [formData, setFormData] = useState({
-    A1: 'Male', // Gender
-    A2: 25, // Age
-    A3: 0.0, // Debt
-    A4: 'Single', // Marital Status
-    A5: 'Yes', // Bank Customer
-    A6: 'University', // Education Level
-    A7: 'Group A', // Ethnicity
-    A8: 0.0, // Years Employed
-    A9: 'No', // Prior Default
-    A10: 'Employed', // Employment Status
-    A11: 0, // Credit Score
-    A12: 'No', // Drivers License
-    A13: 'By Birth', // Citizenship
-    A14: '00000', // Zip Code
-    A15: 0, // Income
-  });
+export const INITIAL_FORM_STATE = {
+  A1: 'Male',
+  A2: 25,
+  A3: 0.0,
+  A4: 'Single',
+  A5: 'Yes',
+  A6: 'University',
+  A7: 'Group A',
+  A8: 0.0,
+  A9: 'No',
+  A10: 'Employed',
+  A11: 0,
+  A12: 'No',
+  A13: 'By Birth',
+  A14: '00000',
+  A15: 0,
+};
 
+export const MODEL_OPTIONS = [
+  { value: 'random_forest', label: 'Random Forest' },
+  { value: 'logistic_regression', label: 'Logistic Regression' },
+];
+
+const LoanForm = ({
+  formData: controlledFormData,
+  setFormData: controlledSetFormData,
+  selectedModel: controlledSelectedModel,
+  setSelectedModel: controlledSetSelectedModel,
+  onSubmit,
+  onReset,
+  loading,
+}) => {
+  // Support both controlled mode (from parent App) and uncontrolled fallback
+  const [internalFormData, setInternalFormData] = useState({ ...INITIAL_FORM_STATE });
+  const [internalModel, setInternalModel] = useState('random_forest');
   const [errors, setErrors] = useState({});
+
+  const formData = controlledFormData !== undefined ? controlledFormData : internalFormData;
+  const setFormData = controlledSetFormData !== undefined ? controlledSetFormData : setInternalFormData;
+  const selectedModel = controlledSelectedModel !== undefined ? controlledSelectedModel : internalModel;
+  const setSelectedModel = controlledSetSelectedModel !== undefined ? controlledSetSelectedModel : setInternalModel;
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
     let parsedValue = value;
     if (type === 'number') {
-      parsedValue = value ? Number(value) : '';
+      parsedValue = value !== '' ? Number(value) : '';
     }
     setFormData((prev) => ({ ...prev, [name]: parsedValue }));
-    // Clear error
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
+  };
+
+  const handleModelChange = (e) => {
+    setSelectedModel(e.target.value);
+    // Explicitly preserve all form inputs when switching models
   };
 
   const validate = () => {
@@ -50,7 +75,16 @@ const LoanForm = ({ onSubmit, loading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formData);
+      onSubmit({ ...formData, model: selectedModel });
+    }
+  };
+
+  const handleReset = () => {
+    setFormData({ ...INITIAL_FORM_STATE });
+    setSelectedModel('random_forest');
+    setErrors({});
+    if (onReset) {
+      onReset();
     }
   };
 
@@ -61,6 +95,36 @@ const LoanForm = ({ onSubmit, loading }) => {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
+          {/* Model Selection */}
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-4 border-b pb-2">Model Selection</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="model">Prediction Model</Label>
+                <select
+                  id="model"
+                  name="model"
+                  value={selectedModel}
+                  onChange={handleModelChange}
+                  className="h-10 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                >
+                  {MODEL_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <p className="text-xs text-muted-foreground">
+                  {selectedModel === 'random_forest'
+                    ? 'Random Forest: Non-linear ensemble model with SHAP explanations.'
+                    : 'Logistic Regression: Scaled linear model with feature coefficients.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Personal Info */}
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-4 border-b pb-2">Personal Information</h4>
@@ -180,9 +244,17 @@ const LoanForm = ({ onSubmit, loading }) => {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={loading} className="w-full md:w-auto">
-            {loading ? 'Analyzing...' : 'Analyze Application'}
+        <CardFooter className="flex justify-between pt-4 border-t gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleReset}
+            disabled={loading}
+          >
+            Reset Form
+          </Button>
+          <Button type="submit" disabled={loading} className="flex-1 md:flex-none md:w-auto">
+            {loading ? 'Analyzing...' : 'Predict Loan Approval'}
           </Button>
         </CardFooter>
       </form>

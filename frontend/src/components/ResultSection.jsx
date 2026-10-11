@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/Card';
 import { Spinner } from './ui/Spinner';
-import { Tabs } from './ui/Tabs';
 import { ExplanationTable } from './ui/ExplanationTable';
 
-const ResultSection = ({ result, loading }) => {
-  const [activeTab, setActiveTab] = useState('lime');
+const MODEL_DISPLAY_NAMES = {
+  random_forest: 'Random Forest',
+  logistic_regression: 'Logistic Regression',
+};
 
+const ResultSection = ({ result, loading }) => {
   if (loading) {
     return (
       <Card className="w-full flex items-center justify-center p-12">
@@ -19,12 +21,13 @@ const ResultSection = ({ result, loading }) => {
     return null;
   }
 
-  const isApproved = result.prediction.toLowerCase() === 'approved';
-  const confidence = result.probability ? (result.probability * 100).toFixed(1) : 0;
+  const isApproved = result.prediction?.toLowerCase() === 'approved';
+  const confidence = result.probability ? (result.probability * 100).toFixed(1) : '0';
+  const modelName = MODEL_DISPLAY_NAMES[result.model] || result.model || 'Unknown Model';
+  const isRF = result.model === 'random_forest';
   
-  // The API returns limeExplanation and shapExplanation, nested with { features: [...] }
-  const limeFeatures = result.limeExplanation?.features || result.lime_explanation || [];
-  const shapFeatures = result.shapExplanation?.features || result.shap_explanation || [];
+  const explanationFeatures = result.shapExplanation?.features || [];
+  const explanationLabel = isRF ? 'SHAP Feature Impact' : 'Feature Coefficients';
 
   return (
     <Card className="w-full">
@@ -32,13 +35,11 @@ const ResultSection = ({ result, loading }) => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <CardTitle>AI Decision Summary</CardTitle>
-            <CardDescription>How the model evaluated the application.</CardDescription>
+            <CardDescription>Prediction from <strong>{modelName}</strong></CardDescription>
           </div>
-          {result.isMock && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-              ⚠ Placeholder result — model not yet integrated
-            </span>
-          )}
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            Model: {modelName}
+          </span>
         </div>
       </CardHeader>
       
@@ -58,32 +59,22 @@ const ResultSection = ({ result, loading }) => {
           <div className="flex-1">
             <h3 className="text-lg font-medium">Prediction Analysis</h3>
             <p className="text-muted-foreground text-sm mt-1">
-              The AI model is {confidence}% confident in this {isApproved ? 'approval' : 'rejection'}. 
+              The <strong>{modelName}</strong> model is {confidence}% confident in this {isApproved ? 'approval' : 'rejection'}.
               Below is a breakdown of which features influenced the model's decision the most.
             </p>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b pb-2">
-            <h4 className="text-sm font-semibold text-foreground">Feature Impact Explanation</h4>
-            <Tabs 
-              tabs={[
-                { id: 'lime', label: 'LIME Analysis' },
-                { id: 'shap', label: 'SHAP Values' }
-              ]}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+        {explanationFeatures.length > 0 && (
+          <div className="space-y-4">
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-semibold text-foreground">{explanationLabel}</h4>
+            </div>
+            <div className="pt-2">
+              <ExplanationTable features={explanationFeatures} type={isRF ? 'shap' : 'coefficients'} />
+            </div>
           </div>
-          
-          <div className="pt-2">
-            <ExplanationTable 
-              features={activeTab === 'lime' ? limeFeatures : shapFeatures} 
-              type={activeTab} 
-            />
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

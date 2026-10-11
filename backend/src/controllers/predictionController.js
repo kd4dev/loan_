@@ -18,12 +18,17 @@ exports.predict = async (req, res, next) => {
         // Save to DB if connection exists
         let savedQuery = null;
         if (process.env.MONGODB_URI) {
-            savedQuery = await Query.create({
-                inputData,
-                prediction: result.prediction,
-                probability: result.probability,
-                isMock: isMockMode
-            });
+            try {
+                savedQuery = await Query.create({
+                    inputData,
+                    prediction: result.prediction,
+                    probability: result.probability,
+                    model: result.model || req.body.model || 'random_forest',
+                    isMock: isMockMode
+                });
+            } catch (dbErr) {
+                logger.warn('Failed to save query to DB:', dbErr.message);
+            }
         }
 
         res.json({
@@ -50,14 +55,19 @@ exports.explain = async (req, res, next) => {
         // Save to DB if connection exists
         let savedQuery = null;
         if (process.env.MONGODB_URI) {
-            savedQuery = await Query.create({
-                inputData,
-                prediction: result.prediction,
-                probability: result.probability,
-                limeExplanation: result.limeExplanation,
-                shapExplanation: result.shapExplanation,
-                isMock: isMockMode
-            });
+            try {
+                savedQuery = await Query.create({
+                    inputData,
+                    prediction: result.prediction,
+                    probability: result.probability,
+                    model: result.model || req.body.model || 'random_forest',
+                    limeExplanation: result.limeExplanation,
+                    shapExplanation: result.shapExplanation,
+                    isMock: isMockMode
+                });
+            } catch (dbErr) {
+                logger.warn('Failed to save query to DB:', dbErr.message);
+            }
         }
 
         res.json({
@@ -69,10 +79,23 @@ exports.explain = async (req, res, next) => {
     }
 };
 
+exports.getEvaluation = async (req, res, next) => {
+    try {
+        const isMockMode = process.env.MOCK_MODE === 'true';
+        if (isMockMode) {
+            return res.json({ error: 'Evaluation not available in mock mode' });
+        }
+        const result = await pythonService.getEvaluation();
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+
 exports.getQueries = async (req, res, next) => {
     try {
         if (!process.env.MONGODB_URI) {
-            return res.json([]); // Return empty if no DB
+            return res.json([]);
         }
         const queries = await Query.find().sort({ createdAt: -1 });
         res.json(queries);

@@ -4,6 +4,7 @@ const QuerySchema = new mongoose.Schema({
     inputData: { type: Object, required: true },
     prediction: { type: String, enum: ['approved', 'rejected'] },
     probability: { type: Number },
+    model: { type: String, default: 'random_forest' },
     limeExplanation: { type: Object, default: null },
     shapExplanation: { type: Object, default: null },
     isMock: { type: Boolean, default: true },
